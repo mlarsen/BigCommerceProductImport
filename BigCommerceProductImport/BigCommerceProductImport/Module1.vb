@@ -357,7 +357,7 @@ Module Module1
         Exportfile.Close()
 
         'Import the cleaned up file into TempBCProducts
-        UpdateDialog("Importing BigCommerce products into a temporary table.", Form1.TextBox1)
+        UpdateDialog("Importing BigCommerce products into a temporary table.", Form1.TextBox2)
         stSQL = "IMPORT TABLE TempBCProducts EXCLUSIVE FROM " + Chr(34) + stExportfile + Chr(34) + " ;"
         SQLTextQuery("I", stSQL, CoreFunctions.stODBCString, 0)
 
@@ -546,7 +546,7 @@ Module Module1
 
 
         'Delete the existing Channellistings for matching products
-        UpdateDialog("Deleting " + stChannelAccount + " listings already in Channergy from the temporary table.", Form1.TextBox1)
+        UpdateDialog("Deleting " + stChannelAccount + " listings already in Channergy from the temporary table.", Form1.TextBox2)
 
         stSQL = "DELETE FROM TempBCProducts T JOIN ChannelListings C ON T.ProductSKU=C.SKU AND T.ChannelAccountNo=C.ChannelAccountNo;"
         SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
