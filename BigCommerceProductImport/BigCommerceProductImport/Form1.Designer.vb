@@ -39,6 +39,7 @@ Partial Class Form1
         Me.txtDataPath = New System.Windows.Forms.TextBox()
         Me.CheckBox1 = New System.Windows.Forms.CheckBox()
         Me.ProgressBar1 = New System.Windows.Forms.ProgressBar()
+        Me.txtVersion = New System.Windows.Forms.TextBox()
         Me.SuspendLayout()
         '
         'Button1
@@ -177,17 +178,30 @@ Partial Class Form1
         '
         'ProgressBar1
         '
+        Me.ProgressBar1.Anchor = CType(((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left) _
+            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
         Me.ProgressBar1.Location = New System.Drawing.Point(-3, 483)
         Me.ProgressBar1.Name = "ProgressBar1"
         Me.ProgressBar1.Size = New System.Drawing.Size(615, 26)
         Me.ProgressBar1.TabIndex = 20
         Me.ProgressBar1.Visible = False
         '
+        'txtVersion
+        '
+        Me.txtVersion.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
+        Me.txtVersion.Location = New System.Drawing.Point(-3, 489)
+        Me.txtVersion.Name = "txtVersion"
+        Me.txtVersion.ReadOnly = True
+        Me.txtVersion.Size = New System.Drawing.Size(167, 20)
+        Me.txtVersion.TabIndex = 21
+        Me.txtVersion.TabStop = False
+        '
         'Form1
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
         Me.ClientSize = New System.Drawing.Size(609, 506)
+        Me.Controls.Add(Me.txtVersion)
         Me.Controls.Add(Me.ProgressBar1)
         Me.Controls.Add(Me.CheckBox1)
         Me.Controls.Add(Me.txtDataPath)
@@ -225,5 +239,5 @@ Partial Class Form1
     Friend WithEvents txtDataPath As System.Windows.Forms.TextBox
     Friend WithEvents CheckBox1 As System.Windows.Forms.CheckBox
     Friend WithEvents ProgressBar1 As System.Windows.Forms.ProgressBar
-
+    Friend WithEvents txtVersion As TextBox
 End Class

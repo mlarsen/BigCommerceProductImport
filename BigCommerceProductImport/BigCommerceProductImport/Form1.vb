@@ -23,7 +23,7 @@
     End Sub
 
     Private Sub Button2_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button2.Click
-        Main(stFileName, stPath)
+        Module1.Main(stFileName, stPath)
     End Sub
 
     Private Sub FormLoad(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
@@ -34,15 +34,25 @@
             stPath = stPath + "\"
         End If
 
-             'Get the connection string
-        stODBCString = GetDSN(stPath)
+        'Get the connection string
+        CoreFunctions.stODBCString = CoreFunctions.GetDSN(stPath)
 
-        If stODBCString = "" Then
+        If CoreFunctions.stODBCString = "" Then
             MessageBox.Show("This utility is not installed in a valid Channergy data folder.", "Error", MessageBoxButtons.OK)
             Close()
         Else
-            Me.txtDataPath.AppendText(stPath)
-            LoadForm()
+            If CoreFunctions.IsLicensed("BC Product Import") = True Then
+
+                'Get the version infomration
+                Me.txtVersion.Text = "Version:" + Reflection.Assembly.GetExecutingAssembly.GetName.Version.Major.ToString + "." + Reflection.Assembly.GetExecutingAssembly.GetName.Version.Minor.ToString + "." + Reflection.Assembly.GetExecutingAssembly.GetName.Version.Build.ToString + "." + Reflection.Assembly.GetExecutingAssembly.GetName.Version.Revision.ToString
+
+                Me.txtDataPath.AppendText(stPath)
+                LoadForm()
+            Else
+                frmNotLicensed.ShowDialog()
+                Me.Close()
+            End If
+
         End If
 
 
