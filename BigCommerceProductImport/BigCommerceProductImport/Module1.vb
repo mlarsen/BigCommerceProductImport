@@ -7,8 +7,8 @@ Module Module1
     Dim FileName As String
     Public sqlArray(30) As String
     Dim OutputFile As String
-    'Public stPath As String = System.AppDomain.CurrentDomain.BaseDirectory()
-    Public stPath As String = "e:\core\heltontools\test\"
+    Public stPath As String = System.AppDomain.CurrentDomain.BaseDirectory()
+    'Public stPath As String = "E:\Core\HeltonTools\CSEngine"
     Dim FileExt As String
     Public stChannelAccount As String
     Public stFBAChannelAccount As String
@@ -41,7 +41,7 @@ Module Module1
 
 
         'Make sure the dialog box is cleared.
-        UpdateDialog("NULL")
+        UpdateDialog("NULL", Form1.TextBox2)
 
         'Check if file is in DOS format
         If CheckIfDOS(stfilename) = False Then
@@ -59,7 +59,7 @@ Module Module1
         BigCommerceImport(OutputFile, stODBCString)
 
         'Show completion message
-        UpdateDialog("Done!")
+        UpdateDialog("Done!", Form1.TextBox2)
     End Sub
     Sub BigCommerceImport(ByRef stFileName As String, ByRef stODBCString As String)
         Dim stSQL As String
@@ -86,12 +86,12 @@ Module Module1
 
         'Get the BigCommerce account information
         stSQL = "SELECT ChannelAccountNo FROM ChannelAccounts WHERE ChannelNo=23 AND Description='" & stChannelAccount & "';"
-        SQLTextQuery("S", stSQL, stODBCString, 1)
+        SQLTextQuery("S", stSQL, CoreFunctions.stODBCString, 1)
         stBCAccountNo = sqlArray(0)
 
         'Drop table if exists
         stSQL = "DROP TABLE IF EXISTS TempBCProducts;"
-        SQLTextQuery("D", stSQL, stODBCString, 0)
+        SQLTextQuery("D", stSQL, CoreFunctions.stODBCString, 0)
 
         'Create Temp Table
         'stSQL = "CREATE TABLE TempBCProducts( " +
@@ -329,11 +329,11 @@ Module Module1
         Chr(34) + "Category" + Chr(34) + " VARCHAR(50), " +
         Chr(34) + "ProductUPC/EAN" + Chr(34) + " VARCHAR(50)); "
 
-        SQLTextQuery("I", stSQL, stODBCString, 0)
+        SQLTextQuery("I", stSQL, CoreFunctions.stODBCString, 0)
 
         'Read in the file clean up the records and then export it to the TempBCProducts.csv
 
-        UpdateDialog("Cleaning up Big Commerce text file.")
+        UpdateDialog("Cleaning up Big Commerce text file.", Form1.TextBox2)
         For Each stLine In File.ReadLines(stFileName)
             If iRowCount = 1 Then
                 Exportfile.WriteLine(stLine)
@@ -357,53 +357,54 @@ Module Module1
         Exportfile.Close()
 
         'Import the cleaned up file into TempBCProducts
-        UpdateDialog("Importing BigCommerce products into a temporary table.")
+        UpdateDialog("Importing BigCommerce products into a temporary table.", Form1.TextBox1)
         stSQL = "IMPORT TABLE TempBCProducts EXCLUSIVE FROM " + Chr(34) + stExportfile + Chr(34) + " ;"
-        SQLTextQuery("I", stSQL, stODBCString, 0)
+        SQLTextQuery("I", stSQL, CoreFunctions.stODBCString, 0)
 
         'Delete the Header row
         stSQL = "DELETE FROM TempBCProducts WHERE ProductID='Product ID';"
-        SQLTextQuery("D", stSQL, stODBCString, 0)
+        SQLTextQuery("D", stSQL, CoreFunctions.stODBCString, 0)
 
-        UpdateDialog("Adding Channergy data fields.")
+        UpdateDialog("Adding Channergy data fields.", Form1.TextBox2)
 
         'Add a RowID field
         stSQL = "ALTER TABLE TempBCProducts ADD COLUMN RowID AUTOINC AT 1,ADD COLUMN ProductNo VARCHAR(100) AT 2,ADD COLUMN MasterCode VARCHAR(20) AT 3,ADD COLUMN Desc VARCHAR(255) AT 4,ADD COLUMN ChannelNo FLOAT DEFAULT 23, ADD COLUMN IsNewProduct BOOLEAN DEFAULT True,ADD COLUMN ChannelAccountNo FLOAT DEFAULT " + stBCAccountNo + ";"
-        SQLTextQuery("D", stSQL, stODBCString, 0)
+        SQLTextQuery("D", stSQL, CoreFunctions.stODBCString, 0)
 
         'Index fields
         stSQL = "CREATE INDEX IF NOT EXISTS idxSKU ON TempBCProducts(ProductSKU);"
-        SQLTextQuery("D", stSQL, stODBCString, 0)
+        SQLTextQuery("D", stSQL, CoreFunctions.stODBCString, 0)
 
         stSQL = "CREATE INDEX IF NOT EXISTS idxChannelAccount ON TempBCProducts(ChannelAccountNo);"
-        SQLTextQuery("D", stSQL, stODBCString, 0)
+        SQLTextQuery("D", stSQL, CoreFunctions.stODBCString, 0)
 
         stSQL = "CREATE INDEX IF NOT EXISTS idxProductNo ON TempBCProducts(ProductNo);"
-        SQLTextQuery("D", stSQL, stODBCString, 0)
+        SQLTextQuery("D", stSQL, CoreFunctions.stODBCString, 0)
 
 
         'Update the ProductNo with the ProductNo from the related ChannelListings
-        UpdateDialog("Updating ProductNo's for existing products.")
+        UpdateDialog("Updating ProductNo's for existing products.", Form1.TextBox2)
         stSQL = "UPDATE TempBCProducts T SET ProductNo=C.ProductNo, IsNewProduct=False FROM TempBCProducts T JOIN ChannelListings C ON T.ProductSKU=C.SKU AND T.ChannelAccountNo=C.ChannelAccountNo JOIN Products P ON C.ProductNo=P.ProductNo;"
-        SQLTextQuery("D", stSQL, stODBCString, 0)
+        SQLTextQuery("D", stSQL, CoreFunctions.stODBCString, 0)
 
         'Update the ProductNo with the ProductNo from the Products table.
         stSQL = "UPDATE TempBCProducts T SET ProductNo=P.ProductNo, IsNewProduct=False FROM TempBCProducts T JOIN Products P ON T.ProductSKU=P.ProductNo WHERE T.ProductNo='';"
-        SQLTextQuery("D", stSQL, stODBCString, 0)
+        SQLTextQuery("D", stSQL, CoreFunctions.stODBCString, 0)
 
 
 
         'Get the max number of rows
         stSQL = "SELECT MAX(RowID) FROM TempBCProducts;"
-        SQLTextQuery("S", stSQL, stODBCString, 1)
+        SQLTextQuery("S", stSQL, CoreFunctions.stODBCString, 1)
 
         If sqlArray(0) <> "0" Then
-            UpdateDialog("Processing sub products.")
+            UpdateDialog("Processing sub products.", Form1.TextBox2)
             iMaxRowID = CInt(sqlArray(0))
             'Set up progress bar
             Form1.ProgressBar1.Minimum = 1
             Form1.ProgressBar1.Maximum = iMaxRowID
             Form1.ProgressBar1.Visible = True
+            Form1.txtVersion.Visible = False
         Else
             iMaxRowID = 0
         End If
@@ -412,7 +413,7 @@ Module Module1
         Do While iRowID <= iMaxRowID
             'Get the core data
             stSQL = "SELECT ProductType, ProductName,BinPickingNumber,BrandName,Price,CostPrice,RetailPrice,SalePrice,FixedShippingCost,ProductWeight,ProductWidth,ProductHeight,ProductDepth,CurrentStockLevel,ProductImageFile1,ProductImageFile2 INTO Temp FROM TempBCProducts WHERE RowID=" + CStr(iRowID) + ";"
-            SQLTextQuery("S", stSQL, stODBCString, 16)
+            SQLTextQuery("S", stSQL, CoreFunctions.stODBCString, 16)
 
             'If the product type is a P, then store it in the product array
             If sqlArray(0) = "P" Then
@@ -420,9 +421,9 @@ Module Module1
                 stSQL = "UPDATE TempBCProducts SET ProductNo=IF(ProductNo='',UPPER(ProductSKU),ProductNo),"
                 stSQL = stSQL + "Desc ='" + stMasterProduct(1) + "' "
                 stSQL = stSQL + "WHERE RowID=" + CStr(iRowID) + ";"
-                SQLTextQuery("U", stSQL, stODBCString, 0)
+                SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
             Else 'Update the sub product fields
-                UpdateDialog("Updating sub products for " + stMasterProduct(1))
+                UpdateDialog("Updating sub products for " + stMasterProduct(1), Form1.TextBox2)
                 stSQL = "UPDATE TempBCProducts SET "
                 'Update for BH Moto
                 'stSQL = stSQL + "MasterCode=IF(MasterCode='',UPPER(LEFT(ProductSKU,6)),MasterCode),"
@@ -443,16 +444,19 @@ Module Module1
                 stSQL = stSQL + "ProductDepth='" + stMasterProduct(12) + "',"
                 stSQL = stSQL + "ProductImageFile1='" + stMasterProduct(16) + "',"
                 stSQL = stSQL + "ProductImageFile2='" + stMasterProduct(17) + "' WHERE RowID=" + CStr(iRowID) + ";"
-                SQLTextQuery("U", stSQL, stODBCString)
+                SQLTextQuery("U", stSQL, CoreFunctions.stODBCString)
 
             End If
             Form1.ProgressBar1.Value = iRowID
             iRowID = iRowID + 1
         Loop
 
+        Form1.ProgressBar1.Visible = False
+        Form1.txtVersion.Visible = True
+
         'If the user opted to update existing products in Channergy then do so here
         If bolUpdateExistingProd = True Then
-            UpdateDialog("Updating existing product information.")
+            UpdateDialog("Updating existing product information.", Form1.TextBox2)
             stSQL = "UPDATE Products P SET "
             stSQL = stSQL + "Description=T.Desc,"
             stSQL = stSQL + "ManufacturerID=T.BrandName,"
@@ -469,21 +473,21 @@ Module Module1
             stSQL = stSQL + "ImageURLSmall=T.ProductImageFile2, "
             stSQL = stSQL + "Serial=T.MasterCode, "
             stSQL = stSQL + "FROM Products P JOIN TempBCProducts T ON P.ProductNo=T.ProductNo;"
-            SQLTextQuery("U", stSQL, stODBCString, 0)
+            SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
 
-            UpdateDialog("Updating existing channel listings.")
+            UpdateDialog("Updating existing channel listings.", Form1.TextBox2)
             stSQL = "UPDATE ChannelListings C SET Price=CAST(T.Price AS FLOAT),InStock=CAST(T.CurrentStockLevel AS FLOAT),MasterSKU=T.MasterCode FROM ChannelListings C JOIN TempBCProducts T ON C.SKU=T.ProductSKU AND C.ChannelAccountNo=T.ChannelAccountNo;"
-            SQLTextQuery("U", stSQL, stODBCString, 0)
+            SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
 
         End If
 
         'Update the basic products
         If bolAddNewProducts = False Then
             stSQL = "UPDATE TempBCProducts T SET ProductNo=P.ProductNo,IsNewProduct=False FROM TempBCProducts T JOIN Products P ON T.ProductSKU=P.ProductNo WHERE T.ProductNo='';"
-            SQLTextQuery("U", stSQL, stODBCString)
+            SQLTextQuery("U", stSQL, CoreFunctions.stODBCString)
         Else
             stSQL = "UPDATE TempBCProducts SET ProductNo=ProductSKU,IsNewProduct=True  WHERE ProductNo='';"
-            SQLTextQuery("U", stSQL, stODBCString)
+            SQLTextQuery("U", stSQL, CoreFunctions.stODBCString)
         End If
   
 
@@ -491,33 +495,33 @@ Module Module1
         If bolAddNewProducts = False Then
             'Check to see if there are any new products
             stSQL = "SELECT COUNT(ProductNo) FROM TempBCProducts WHERE IsNewProduct=True;"
-            SQLTextQuery("S", stSQL, stODBCString, 1)
+            SQLTextQuery("S", stSQL, CoreFunctions.stODBCString, 1)
 
             If sqlArray(0) <> "0" And sqlArray(0) <> "" Then
                 stSQL = "SELECT * INTO NewBCProducts FROM TempBCProducts WHERE IsNewProduct=True;"
-                SQLTextQuery("I", stSQL, stODBCString, 0)
+                SQLTextQuery("I", stSQL, CoreFunctions.stODBCString, 0)
 
                 'Drop the Desc and Master code from NewBCProducts.
                 stSQL = "ALTER TABLE NewBCProducts DROP COLUMN MasterCode,DROP COLUMN Desc;"
-                SQLTextQuery("D", stSQL, stODBCString, 0)
+                SQLTextQuery("D", stSQL, CoreFunctions.stODBCString, 0)
 
                 'Update the ProductNo in the NewBCProducts
                 stSQL = "UPDATE NewBCProducts SET ProductNo='';"
-                SQLTextQuery("I", stSQL, stODBCString, 0)
+                SQLTextQuery("I", stSQL, CoreFunctions.stODBCString, 0)
 
                 'Export file
                 stSQL = "EXPORT TABLE NewBCProducts TO " + Chr(34) + stNewProductFile + Chr(34) + " WITH HEADERS;"
                 SQLTextQuery("U", stSQL, stODBCString, 0)
-                UpdateDialog("Unmatched products exported to " + stNewProductFile)
+                UpdateDialog("Unmatched products exported to " + stNewProductFile, Form1.TextBox2)
 
             End If
         Else
 
-            UpdateDialog("Adding new products to the products table.")
+            UpdateDialog("Adding new products to the products table.", Form1.TextBox2)
 
             'Add the new products
             stSQL = "INSERT INTO Products(ProductNo) SELECT DISTINCT ProductNo FROM TempBCProducts T LEFT OUTER JOIN Products P ON T.ProductNo=P.ProductNo WHERE IsNewProduct=True AND P.ProductNo='' AND T.Desc<>'';"
-            SQLTextQuery("U", stSQL, stODBCString, 0)
+            SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
 
             stSQL = "UPDATE Products P SET "
             stSQL = stSQL + "Description=T.Desc,"
@@ -534,7 +538,7 @@ Module Module1
             stSQL = stSQL + "ImageURLLarge=T.ProductImageFile1,"
             stSQL = stSQL + "ImageURLSmall=T.ProductImageFile2 "
             stSQL = stSQL + "FROM Products P JOIN TempBCProducts T ON P.ProductNo=T.ProductNo;"
-            SQLTextQuery("U", stSQL, stODBCString, 0)
+            SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
 
             'ParseBCSubProd()
 
@@ -542,13 +546,13 @@ Module Module1
 
 
         'Delete the existing Channellistings for matching products
-        UpdateDialog("Deleting " + stChannelAccount + " listings already in Channergy from the temporary table.")
+        UpdateDialog("Deleting " + stChannelAccount + " listings already in Channergy from the temporary table.", Form1.TextBox1)
 
         stSQL = "DELETE FROM TempBCProducts T JOIN ChannelListings C ON T.ProductSKU=C.SKU AND T.ChannelAccountNo=C.ChannelAccountNo;"
-        SQLTextQuery("U", stSQL, stODBCString, 0)
+        SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
 
         'Add the new Channel Listings
-        UpdateDialog("Adding new " + stChannelAccount + " listings.")
+        UpdateDialog("Adding new " + stChannelAccount + " listings.", Form1.TextBox2)
 
         If bolAddNewProducts = False Then
             stSQL = "INSERT INTO ChannelListings("
@@ -578,7 +582,7 @@ Module Module1
             'stSQL = stSQL + "LEFT(ProductSKU,8)"
             stSQL = stSQL + "MasterCode"
             stSQL = stSQL + " FROM TempBCProducts WHERE ProductNo<>'' AND IsNewProduct=False;"
-            SQLTextQuery("I", stSQL, stODBCString, 0)
+            SQLTextQuery("I", stSQL, CoreFunctions.stODBCString, 0)
         Else
             stSQL = "INSERT INTO ChannelListings("
             stSQL = stSQL + "ChannelNo,"
@@ -607,10 +611,10 @@ Module Module1
             'stSQL = stSQL + "LEFT(ProductSKU,8)"
             stSQL = stSQL + "MasterCode"
             stSQL = stSQL + " FROM TempBCProducts WHERE ProductNo<>'' AND IsNewProduct=True;"
-            SQLTextQuery("I", stSQL, stODBCString, 0)
+            SQLTextQuery("I", stSQL, CoreFunctions.stODBCString, 0)
         End If
- 
-        UpdateDialog("BigCommerce product channel listings for " + stChannelAccount + " created.")
+
+        UpdateDialog("BigCommerce product channel listings for " + stChannelAccount + " created.", Form1.TextBox2)
 
 
     End Sub
@@ -629,30 +633,30 @@ Module Module1
 
         'Grab all of the products that have MasterCodes
         stSQL = "SELECT ProductNo,MasterCode,ProductName INTO TempBCSubProd FROM TempBCProducts WHERE MasterCode<>'';"
-        SQLTextQuery("U", stSQL, stODBCString, 0)
+        SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
 
         'Create the temp table for dumping the parsed attributes pairs
         stSQL = "DROP TABLE IF EXISTS TempBCSubProducts;"
-        SQLTextQuery("D", stSQL, stODBCString, 0)
+        SQLTextQuery("D", stSQL, CoreFunctions.stODBCString, 0)
 
         stSQL = "CREATE TABLE TempBCSubProducts(ProductNo VARCHAR(100),MasterCode VARCHAR(20),Option VARCHAR(30),Value VARCHAR(40));"
-        SQLTextQuery("U", stSQL, stODBCString, 0)
+        SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
 
         'Add the fields to the table
         stSQL = "ALTER TABLE TempBCSubProd ADD COLUMN RowID AUTOINC AT 1,ADD COLUMN CustomDesc VARCHAR(255);"
-        SQLTextQuery("U", stSQL, stODBCString, 0)
+        SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
 
         'Create Indexes
         stSQL = "CREATE INDEX IF NOT EXISTS idxProductOptionValue ON TempBCSubProducts(ProductNo,Option,Value);"
-        SQLTextQuery("U", stSQL, stODBCString, 0)
+        SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
 
         stSQL = "CREATE INDEX IF NOT EXISTS idxProducts ON TempBCSubProducts(ProductNo);"
-        SQLTextQuery("U", stSQL, stODBCString, 0)
+        SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
 
 
         'Get the iMaxCount
         stSQL = "SELECT MAX(RowID) FROM TempBCSubProd;"
-        SQLTextQuery("S", stSQL, stODBCString, 1)
+        SQLTextQuery("S", stSQL, CoreFunctions.stODBCString, 1)
 
         If sqlArray(0) <> "0" And sqlArray(0) <> "" Then
             iMaxCount = CInt(sqlArray(0))
@@ -663,10 +667,10 @@ Module Module1
         Do While iCounter <= iMaxCount
             'Get the ProductName
             stSQL = "SELECT ProductName,ProductNo,MasterCode FROM TempBCSubProd WHERE RowID=" + CStr(iCounter) + ";"
-            SQLTextQuery("S", stSQL, stODBCString, 3)
+            SQLTextQuery("S", stSQL, CoreFunctions.stODBCString, 3)
             stProductNo = sqlArray(1)
             stMasterCode = sqlArray(2)
-            UpdateDialog("Creating Subproducts for " + stProductNo)
+            UpdateDialog("Creating Subproducts for " + stProductNo, Form1.TextBox2)
 
             'Strip the trailing color information
             Dim rgx As New Regex(stFind)
@@ -683,31 +687,31 @@ Module Module1
                 stAttributes = stAttribute.Split("=")
                 stSQL = "INSERT INTO TempBCSubProducts(ProductNo,MasterCode,Option,Value) "
                 stSQL = stSQL + "VALUES('" + stProductNo + "','" + stMasterCode + "',UPPER('" + stAttributes(0) + "'),UPPER('" + stAttributes(1) + "'));"
-                SQLTextQuery("I", stSQL, stODBCString, 0)
+                SQLTextQuery("I", stSQL, CoreFunctions.stODBCString, 0)
 
                 'Update the CustomDesc in TempBCSubProd
                 stSQL = "UPDATE TempBCSubProd SET CustomDesc=IF(CustomDesc='',UPPER('" + stAttributes(0) + "')+':'+UPPER('" + stAttributes(1) + "'),CustomDesc+ #13+#10 +UPPER('" + stAttributes(0) + "')+':'+UPPER('" + stAttributes(1) + "')) WHERE ProductNo='" + stProductNo + "';"
-                SQLTextQuery("I", stSQL, stODBCString, 0)
+                SQLTextQuery("I", stSQL, CoreFunctions.stODBCString, 0)
             Next
             iCounter = iCounter + 1
         Loop
 
         'Delete products that are already in the Subproducts table
-        UpdateDialog("Deleting exising subproducts from the temp table.")
+        UpdateDialog("Deleting exising subproducts from the temp table.", Form1.TextBox2)
         stSQL = "DELETE FROM TempBCSubProducts T JOIN SubProducts S ON T.ProductNo=S.ProductNo AND T.Option=S.Option AND T.Value=S.Value;"
-        SQLTextQuery("D", stSQL, stODBCString, 0)
+        SQLTextQuery("D", stSQL, CoreFunctions.stODBCString, 0)
 
         'Add the new Subproducts
-        UpdateDialog("Adding new subproducts to Channergy.")
+        UpdateDialog("Adding new subproducts to Channergy.", Form1.TextBox2)
         stSQL = "INSERT INTO SubProducts(ProductNo,MasterCode,Option,Value) "
         stSQL = stSQL + "SELECT ProductNo,MasterCode,Option,Value FROM TempBCSubProducts;"
-        SQLTextQuery("U", stSQL, stODBCString, 0)
+        SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
 
 
         'Update the Serial number in the products table
-        UpdateDialog("Updating the Master Code and Custom Description in Channergy.")
+        UpdateDialog("Updating the Master Code and Custom Description in Channergy.", Form1.TextBox2)
         stSQL = "UPDATE Products P SET Serial=T.MasterCode,CustomDesc=CAST(T.CustomDesc AS MEMO) FROM Products P JOIN TempBCSubProd T ON P.ProductNo=T.ProductNo;"
-        SQLTextQuery("U", stSQL, stODBCString, 0)
+        SQLTextQuery("U", stSQL, CoreFunctions.stODBCString, 0)
 
     End Sub
     Sub ConvUnix2Dos(ByVal stFileName As String)
@@ -733,56 +737,20 @@ Module Module1
         If dFileContents <> FileContents Then
             'write result If different
             FileWrite(OutputFile, dFileContents)
-            UpdateDialog("New file saved as " + OutputFile)
+            UpdateDialog("New file saved as " + OutputFile, Form1.TextBox2)
             'MsgBox("New file saved as " + OutputFile)
         End If
 
     End Sub
     Sub LoadForm()
-        Dim Count As Integer = 1
         Dim stSQL As String
-        Dim Max As Integer
-        Dim ChannelAccount As String
-
-        'Clear out existing combo boxes
-        Form1.ComboBox1.Items.Clear()
-        Form1.ComboBox1.Refresh()
 
 
         stSQL = "SELECT Description FROM ChannelAccounts WHERE ChannelNo=23;"
 
-        LoadCombo2(stSQL)
-
-        'Get Number of rows 
-        stSQL = "SELECT COUNT(Temp) FROM Temp;"
-        SQLTextQuery("S", stSQL, stODBCString, 1)
-        If sqlArray(0) = "" Then
-            Max = 0
-        Else
-            Max = CInt(sqlArray(0))
-        End If
-
-        If Max > 0 Then
+        CoreFunctions.LoadCombo(Form1.ComboBox1, stSQL)
 
 
-            Do While Count <= Max
-                'Get item to add
-                stSQL = "SELECT Temp FROM Temp WHERE Mark=False TOP 1;"
-                SQLTextQuery("S", stSQL, stODBCString, 1)
-                ChannelAccount = sqlArray(0)
-                Form1.ComboBox1.Items.Add(ChannelAccount)
-
-                'Update Mark flag
-                stSQL = "UPDATE Temp SET Mark=True WHERE Temp='" & ChannelAccount & "';"
-                SQLTextQuery("U", stSQL, stODBCString, 0)
-
-                'Update counter
-                Count = Count + 1
-            Loop
-
-        Else
-            MessageBox.Show("No channel account for Big Commerce has been set up in Channergy. Please set up your Big Commerce account in Tools->Preferences before continuing.", "No Big Commerce Account", MessageBoxButtons.OK)
-        End If
     End Sub
     Sub LoadCombo2(ByVal SelectSQL As String)
         Dim stSQL As String
@@ -988,74 +956,7 @@ Module Module1
 
         Return stDSN
     End Function
-    Sub SQLTextQuery(ByVal QueryType As String, ByVal CommandText As String, ByVal stODBC As String, Optional ByVal Columns As Integer = 0)
-        'Dim DBCString As String = "Driver={C:\dbisam\odbc\std\ver4\lib\dbodbc\dbodbc.dll};connectiontype=Local;remoteipaddress=127.0.0.1;RemotePort=12005;remotereadahead=50;catalogname=" + stODBCString + ";readonly=False;lockretrycount=15;lockwaittime=100;forcebufferflush=False;strictchangedetection=False;"
 
-        'Dim DBC As New System.Data.Odbc.OdbcConnection
-        'DBC.ConnectionString = DBCString
-
-        Dim DBC As New OdbcConnection(stODBC)
-        'Dim DBCString As String = "Dsn=" & stODBC & ";"
-
-        'Dim DBC As New OdbcConnection(DBCString)
-
-        If QueryType = "S" And Columns > 0 Then
-            Try
-                Dim SQL1 As New OdbcCommand
-                SQL1.Connection = DBC
-                SQL1.CommandType = CommandType.Text
-                SQL1.CommandText = CommandText
-                DBC.Open()
-
-                Dim DataRow As OdbcDataReader
-                DataRow = SQL1.ExecuteReader()
-                DataRow.Read()
-                If DataRow.HasRows Then
-                    Dim Counter As Integer = 0
-                    While Counter < Columns
-                        sqlArray(Counter) = DataRow(Counter).ToString
-                        Counter = Counter + 1
-                    End While
-                Else
-                    sqlArray(0) = "NoData"
-                End If
-                DataRow.Close()
-                DBC.Close()
-                SQL1.Dispose()
-
-            Catch ex As Exception
-                MessageBox.Show("SQL2 Exception Message: " & ex.Message)
-                UpdateDialog("SQL1 Exception Message: " & ex.Message)
-                bolIsError = True
-            End Try
-        End If
-        If QueryType = "U" Or QueryType = "I" Or QueryType = "D" Then
-            Try
-                DBC.Open()
-                Dim SQL2 As New OdbcCommand
-                SQL2.Connection = DBC
-                SQL2.CommandType = CommandType.Text
-                SQL2.CommandTimeout = 60
-                SQL2.CommandText = CommandText
-                SQL2.ExecuteScalar()
-                DBC.Close()
-                SQL2.Dispose()
-
-            Catch ex As Exception
-                MessageBox.Show("SQL2 Exception Message: " & ex.Message)
-                UpdateDialog("SQL1 Exception Message: " & ex.Message)
-                bolIsError = True
-            End Try
-        End If
-    End Sub
-    Sub UpdateDialog(ByVal stMessage)
-        Dim CRLF As String = Chr(13) + Chr(10)
-        If stMessage = "NULL" Then
-            Form1.TextBox2.Clear()
-        Else
-            Form1.TextBox2.AppendText(TimeString + ": " + stMessage + CRLF)
-        End If
-    End Sub
     ' IniFile class used to read and write ini files by loading the file into memory
     Public Class IniFile
         ' List of IniSection objects keeps track of all the sections in the INI file

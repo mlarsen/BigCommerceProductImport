@@ -36,3 +36,16 @@ C:\Users\msore\Google Drive\Projects\BigCommerceProductImport\BigCommerceProduct
 C:\Users\msore\Google Drive\Projects\BigCommerceProductImport\BigCommerceProductImport\obj\Debug\BigCommerceProductImport.xml
 C:\Users\msore\Google Drive\Projects\BigCommerceProductImport\BigCommerceProductImport\obj\Debug\BigCommerceProductImport.pdb
 C:\Users\msore\Google Drive\Projects\BigCommerceProductImport\BigCommerceProductImport\obj\Debug\BigCommerceProductImport.vbprojAssemblyReference.cache
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\bin\Debug\BigCommerceProductImport.exe.config
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\bin\Debug\BigCommerceProductImport.exe
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\bin\Debug\BigCommerceProductImport.pdb
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\bin\Debug\BigCommerceProductImport.xml
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\obj\Debug\BigCommerceProductImport.vbprojAssemblyReference.cache
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\obj\Debug\BigCommerceProductImport.Form1.resources
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\obj\Debug\BigCommerceProductImport.frmNotLicensed.resources
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\obj\Debug\BigCommerceProductImport.Resources.resources
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\obj\Debug\BigCommerceProductImport.vbproj.GenerateResource.cache
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\obj\Debug\BigCommerceProductImport.vbproj.CoreCompileInputs.cache
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\obj\Debug\BigCommerceProductImport.exe
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\obj\Debug\BigCommerceProductImport.xml
+C:\Users\msore\Google Drive\Projects\mlarsen\BigCommerceProductImport\BigCommerceProductImport\BigCommerceProductImport\obj\Debug\BigCommerceProductImport.pdb
